@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tarım Devrimi ve Eski Çağ Medeniyetleri - Boşluk Doldurma Oyunu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            earth: {
+              50: '#fcf9f2',
+              100: '#f4ece1',
+              200: '#e8dec8',
+              300: '#d5c2a1',
+              400: '#c28e46',
+              500: '#8c5a2b',
+              600: '#734722',
+              700: '#5c371a',
+              800: '#3d2411',
+              900: '#231c15',
+            }
+          },
+          fontFamily: {
+            cinzel: ['Cinzel', 'serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #231c15;
+      color: #2c251e;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+    }
+    .blank-slot {
+      display: inline-block;
+      min-width: 120px;
+      height: 38px;
+      border: 2px dashed #c28e46;
+      border-radius: 8px;
+      background-color: #f4ece1;
+      vertical-align: middle;
+      margin: 0 4px;
+      padding: 0 10px;
+      line-height: 34px;
+      text-align: center;
+      font-weight: 700;
+      color: #5c371a;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .blank-slot.drag-over {
+      background-color: #e8dec8;
+      border-color: #8c5a2b;
+      transform: scale(1.03);
+    }
+    .blank-slot.filled {
+      border-style: solid;
+      border-color: #8c5a2b;
+      background-color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .blank-slot.correct {
+      border-color: #15803d !important;
+      background-color: #f0fdf4 !important;
+      color: #166534 !important;
+    }
+    .blank-slot.incorrect {
+      border-color: #b91c1c !important;
+      background-color: #fef2f2 !important;
+      color: #991b1b !important;
+    }
+    .word-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #5c371a;
+      color: #fcf9f2;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: grab;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    .word-badge:hover {
+      background-color: #8c5a2b;
+      transform: translateY(-2px);
+    }
+    .word-badge.selected {
+      outline: 3px solid #c28e46;
+      background-color: #734722;
+    }
+    .word-badge.used {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <div class="w-full max-w-4xl bg-earth-50 rounded-2xl shadow-2xl overflow-hidden border border-earth-300">
+    
+    <!-- HEADER -->
+    <header class="bg-earth-900 text-earth-100 p-6 md:p-8 border-b border-earth-700 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div>
+        <div class="flex items-center gap-2 text-earth-400 font-semibold text-xs tracking-widest uppercase mb-1">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 3L1 9l11 6l9-4.91V17h2V9L12 3z M3.89 9L12 4.57L20.11 9L12 13.43L3.89 9z M12 17L5 13.18v3.52L12 21l7-4.3v-3.52L12 17z"/></svg>
+          9. Sınıf Tarih • 2. Ünite
+        </div>
+        <h1 class="font-cinzel text-2xl md:text-3xl font-bold text-earth-50">Tarım Devrimi ve İnsanlığın Dönüşümü</h1>
+        <p class="text-earth-300 text-sm mt-1">Aşağıdaki tarihsel metindeki boşlukları doğru kavramlarla doldurunuz.</p>
+      </div>
+
+      <!-- PROGRESS & SCORE PANEL -->
+      <div class="flex items-center gap-4 bg-earth-800/80 px-4 py-3 rounded-xl border border-earth-700">
+        <div class="text-center px-2">
+          <div class="text-xs text-earth-300 uppercase font-bold tracking-wider">İlerleme</div>
+          <div id="progressText" class="text-xl font-bold text-earth-400">0 / 8</div>
+        </div>
+        <div class="h-8 w-px bg-earth-700"></div>
+        <div class="text-center px-2">
+          <div class="text-xs text-earth-300 uppercase font-bold tracking-wider">Puan</div>
+          <div id="scoreText" class="text-xl font-bold text-earth-100">0</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- WORD BANK -->
+    <section class="bg-earth-100 p-6 border-b border-earth-200">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-earth-600 flex items-center gap-2">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          Kelime Havuzu (Sürükleyin veya tıklayarak seçin)
+        </h2>
+        <button id="clearSelectionBtn" class="text-xs text-earth-600 hover:text-earth-900 underline hidden">Seçimi Temizle</button>
+      </div>
+      <div id="wordBank" class="flex flex-wrap gap-2 md:gap-3 min-h-[50px] items-center">
+        <!-- Kelimeler JS ile yüklenecek -->
+      </div>
+    </section>
+
+    <!-- MAIN GAME CONTENT (TEXT WITH BLANKS) -->
+    <main class="p-6 md:p-8 space-y-6 text-earth-900 leading-relaxed text-base md:text-lg">
+      
+      <div id="textContainer" class="bg-white p-6 md:p-8 rounded-xl border border-earth-200 shadow-sm space-y-6">
+        <p>
+          Neolitik Çağ'da insanların toprağı işlemeye başlamasıyla avcılık-toplayıcılıktan 
+          <span class="blank-slot" data-index="0" data-answer="üretim"></span> 
+          ekonomisine geçilmiştir. İnsanların tarlalarının başında bulunma zorunluluğu, mağara yaşantısının sona ermesini ve ilk 
+          <span class="blank-slot" data-index="1" data-answer="yerleşik yaşam"></span> 
+          merkezlerinin kurulmasını sağlamıştır.
+        </p>
+
+        <p>
+          Toprağın daha derinlemesine sürülmesi için insan gücünün yanı sıra 
+          <span class="blank-slot" data-index="2" data-answer="çapa"></span> 
+          ve öküzlerin koşulduğu 
+          <span class="blank-slot" data-index="3" data-answer="saban"></span> 
+          gibi araçlar geliştirilmiştir. Ürün verimini artırmak amacıyla akarsu kenarlarına kanallar açılarak 
+          <span class="blank-slot" data-index="4" data-answer="sulama"></span> 
+          sistemleri kurulmuştur.
+        </p>
+
+        <p>
+          Bu dönemde sadece bitkiler yetiştirilmemiş, koyun ve sığır gibi hayvanların 
+          <span class="blank-slot" data-index="5" data-answer="evcilleştirme"></span> 
+          süreciyle hayvancılık gelişmiştir. Artan üretim fazlası ve uzmanlaşma ihtiyacı toplumda 
+          <span class="blank-slot" data-index="6" data-answer="iş bölümü"></span> 
+          doğurmuş, zamanla toprağın ve mahsulün belirli kişilere ait sayılmasıyla 
+          <span class="blank-slot" data-index="7" data-answer="mülkiyet"></span> 
+          kavramı ve sosyal sınıflar ortaya çıkmıştır.
+        </p>
+      </div>
+
+      <!-- CONTROLS AND FEEDBACK -->
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-earth-200">
+        <button id="resetBtn" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-earth-200 text-earth-800 font-semibold hover:bg-earth-300 transition flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Sıfırla
+        </button>
+
+        <button id="checkBtn" class="w-full sm:w-auto px-8 py-3 rounded-xl bg-earth-500 hover:bg-earth-600 text-white font-bold shadow-lg transition flex items-center justify-center gap-2">
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Cevapları Kontrol Et
+        </button>
+      </div>
+
+    </main>
+
+    <!-- SUMMARY / RESULT SCREEN (HIDDEN BY DEFAULT) -->
+    <div id="resultModal" class="fixed inset-0 bg-earth-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+      <div class="bg-earth-50 max-w-2xl w-full rounded-2xl p-6 md:p-8 shadow-2xl border border-earth-300 space-y-6">
+        <div class="text-center space-y-2">
+          <div class="inline-flex p-3 bg-earth-100 rounded-full text-earth-500 mb-2">
+            <svg class="w-10 h-10 fill-current" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.45l8.3 14.55H3.7L12 5.45zM11 10h2v4h-2zm0 5h2v2h-2z"/></svg>
+          </div>
+          <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-earth-900">Tebrikler! Etkinliği Tamamladınız</h2>
+          <p class="text-earth-600">Tarım Devrimi'nin temel kavramlarını başarıyla eşleştirdiniz.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 bg-earth-100 p-4 rounded-xl border border-earth-200">
+          <div class="text-center">
+            <div class="text-xs text-earth-600 uppercase font-bold">Toplam Puan</div>
+            <div id="finalScore" class="text-3xl font-bold text-earth-500">100 / 100</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xs text-earth-600 uppercase font-bold">Doğru Sayısı</div>
+            <div id="finalAccuracy" class="text-3xl font-bold text-earth-500">8 / 8</div>
+          </div>
+        </div>
+
+        <div class="space-y-3 bg-white p-5 rounded-xl border border-earth-200 text-sm text-earth-800">
+          <h3 class="font-bold text-earth-900 text-base border-b border-earth-200 pb-2">Özet: Tarım Devrimi Neyi Değiştirdi?</h3>
+          <p>
+            Neolitik Çağ'da toprağın işlenmesi ve sulama kanallarının yapılmasıyla başlayan süreç, insanlığın avcı-toplayıcı yaşamdan düzenli üretime geçmesini sağladı.
+          </p>
+          <p>
+            Yerleşik hayata geçiş, artı ürün (üretim fazlası) kavramını doğurdu. Bu da toplumsal iş bölümünü, meslekleri, mülkiyet anlayışını ve nihayetinde ilk şehir devletleri ile Eski Çağ medeniyetlerini biçimlendirdi.
+          </p>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button id="closeModalBtn" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-earth-500 text-white font-bold hover:bg-earth-600 transition">
+            Tekrar Oyna
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const wordsData = [
+      "üretim",
+      "yerleşik yaşam",
+      "çapa",
+      "saban",
+      "sulama",
+      "evcilleştirme",
+      "iş bölümü",
+      "mülkiyet"
+    ];
+
+    let selectedWord = null;
+    let selectedWordElement = null;
+    let filledCount = 0;
+
+    // DOM Elements
+    const wordBankEl = document.getElementById('wordBank');
+    const blankSlots = document.querySelectorAll('.blank-slot');
+    const checkBtn = document.getElementById('checkBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const progressText = document.getElementById('progressText');
+    const scoreText = document.getElementById('scoreText');
+    const resultModal = document.getElementById('resultModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const finalScore = document.getElementById('finalScore');
+    const finalAccuracy = document.getElementById('finalAccuracy');
+
+    // Shuffle Array Helper
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    // Initialize Game
+    function initGame() {
+      wordBankEl.innerHTML = '';
+      selectedWord = null;
+      selectedWordElement = null;
+      filledCount = 0;
+      updateStats(0, 0);
+
+      const shuffledWords = shuffle([...wordsData]);
+
+      shuffledWords.forEach((word) => {
+        const badge = document.createElement('div');
+        badge.className = 'word-badge';
+        badge.textContent = word;
+        badge.draggable = true;
+        badge.dataset.word = word;
+
+        // Drag events
+        badge.addEventListener('dragstart', handleDragStart);
+        badge.addEventListener('dragend', handleDragEnd);
+
+        // Click events for touch/mobile accessibility
+        badge.addEventListener('click', () => handleWordClick(badge, word));
+
+        wordBankEl.appendChild(badge);
+      });
+
+      blankSlots.forEach(slot => {
+        slot.textContent = '';
+        slot.className = 'blank-slot';
+        slot.dataset.filledWord = '';
+        
+        // Drag events for slots
+        slot.addEventListener('dragover', handleDragOver);
+        slot.addEventListener('dragleave', handleDragLeave);
+        slot.addEventListener('drop', handleDrop);
+
+        // Click event for slot filling
+        slot.addEventListener('click', () => handleSlotClick(slot));
+      });
+    }
+
+    // Word Click Handler
+    function handleWordClick(badge, word) {
+      if (badge.classList.contains('used')) return;
+
+      document.querySelectorAll('.word-badge').forEach(b => b.classList.remove('selected'));
+      
+      if (selectedWord === word) {
+        selectedWord = null;
+        selectedWordElement = null;
+      } else {
+        selectedWord = word;
+        selectedWordElement = badge;
+        badge.classList.add('selected');
+      }
+    }
+
+    // Slot Click Handler
+    function handleSlotClick(slot) {
+      if (slot.dataset.filledWord) {
+        // Clear existing word back to word bank
+        const currentWord = slot.dataset.filledWord;
+        returnWordToBank(currentWord);
+        slot.textContent = '';
+        slot.dataset.filledWord = '';
+        slot.classList.remove('filled', 'correct', 'incorrect');
+        updateProgress();
+        return;
+      }
+
+      if (selectedWord && selectedWordElement) {
+        fillSlot(slot, selectedWord);
+        selectedWordElement.classList.add('used');
+        selectedWordElement.classList.remove('selected');
+        selectedWord = null;
+        selectedWordElement = null;
+      }
+    }
+
+    // Drag & Drop Handlers
+    function handleDragStart(e) {
+      if (e.target.classList.contains('used')) {
+        e.preventDefault();
+        return;
+      }
+      e.dataTransfer.setData('text/plain', e.target.dataset.word);
+      e.target.classList.add('opacity-50');
+    }
+
+    function handleDragEnd(e) {
+      e.target.classList.remove('opacity-50');
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      const slot = e.currentTarget;
+      slot.classList.remove('drag-over');
+
+      const word = e.dataTransfer.getData('text/plain');
+      const badge = Array.from(document.querySelectorAll('.word-badge')).find(b => b.dataset.word === word);
+
+      if (word && badge && !badge.classList.contains('used')) {
+        if (slot.dataset.filledWord) {
+          returnWordToBank(slot.dataset.filledWord);
+        }
+        fillSlot(slot, word);
+        badge.classList.add('used');
+      }
+    }
+
+    function fillSlot(slot, word) {
+      slot.textContent = word;
+      slot.dataset.filledWord = word;
+      slot.classList.add('filled');
+      slot.classList.remove('correct', 'incorrect');
+      updateProgress();
+    }
+
+    function returnWordToBank(word) {
+      const badge = Array.from(document.querySelectorAll('.word-badge')).find(b => b.dataset.word === word);
+      if (badge) {
+        badge.classList.remove('used', 'selected');
+      }
+    }
+
+    function updateProgress() {
+      let filled = 0;
+      blankSlots.forEach(s => {
+        if (s.dataset.filledWord) filled++;
+      });
+      filledCount = filled;
+      progressText.textContent = `${filledCount} / ${wordsData.length}`;
+    }
+
+    function updateStats(score, correctCount) {
+      scoreText.textContent = score;
+      progressText.textContent = `${filledCount} / ${wordsData.length}`;
+    }
+
+    // Check Answers
+    checkBtn.addEventListener('click', () => {
+      let correctCount = 0;
+      let totalSlots = blankSlots.length;
+
+      blankSlots.forEach(slot => {
+        const userWord = slot.dataset.filledWord;
+        const correctAnswer = slot.dataset.answer;
+
+        if (userWord === correctAnswer) {
+          slot.classList.remove('incorrect');
+          slot.classList.add('correct');
+          correctCount++;
+        } else {
+          slot.classList.remove('correct');
+          slot.classList.add('incorrect');
+        }
+      });
+
+      const calculatedScore = Math.round((correctCount / totalSlots) * 100);
+      scoreText.textContent = calculatedScore;
+
+      // Show modal if all checked
+      if (filledCount === totalSlots) {
+        setTimeout(() => {
+          finalScore.textContent = `${calculatedScore} / 100`;
+          finalAccuracy.textContent = `${correctCount} / ${totalSlots}`;
+          resultModal.classList.remove('hidden');
+        }, 400);
+      }
+    });
+
+    // Reset Game
+    resetBtn.addEventListener('click', initGame);
+    closeModalBtn.addEventListener('click', () => {
+      resultModal.classList.add('hidden');
+      initGame();
+    });
+
+    // Start on load
+    window.onload = initGame;
+  </script>
+</body>
+</html>
